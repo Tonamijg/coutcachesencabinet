@@ -1,6 +1,7 @@
 import {
   Dysfonctionnements,
   EvaluationState,
+  IDENTIFICATION_VIDE,
   LigneDysfonctionnement,
   LigneRisque,
   PARAMETRES_VIDES,
@@ -150,6 +151,7 @@ export function creerDysfonctionnementsInitiaux(): Dysfonctionnements {
 export function creerEtatInitial(): EvaluationState {
   return {
     version: 1,
+    identification: { ...IDENTIFICATION_VIDE },
     parametres: { ...PARAMETRES_VIDES },
     releveTemps: [],
     dysfonctionnements: creerDysfonctionnementsInitiaux(),

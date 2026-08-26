@@ -4,6 +4,20 @@
 
 export type ValeurSaisie = number | null;
 
+export interface Identification {
+  cabinet: string;
+  nomUtilisateur: string;
+}
+
+export const IDENTIFICATION_VIDE: Identification = {
+  cabinet: "",
+  nomUtilisateur: "",
+};
+
+export function identificationComplete(id: Identification): boolean {
+  return id.cabinet.trim() !== "" && id.nomUtilisateur.trim() !== "";
+}
+
 export interface Parametres {
   chiffreAffaires: ValeurSaisie;
   chargesVariables: ValeurSaisie;
@@ -101,6 +115,7 @@ export interface Dysfonctionnements {
 
 export interface EvaluationState {
   version: 1;
+  identification: Identification;
   parametres: Parametres;
   releveTemps: LigneReleveTemps[];
   dysfonctionnements: Dysfonctionnements;

@@ -7,7 +7,8 @@ import {
   formatPourcentage as formatPourcentageBrut,
 } from "@/lib/format";
 import { LecturesDerivees, Synthese } from "@/lib/calculations";
-import { Parametres, TauxValorisation } from "@/lib/types";
+import { genererLectureQualitative } from "@/lib/interpretation";
+import { Identification, Parametres, TauxValorisation } from "@/lib/types";
 
 // Les polices standard des PDF (Helvetica) ne portent pas le glyphe de l'espace
 // fine insécable (U+202F) utilisée par Intl pour séparer les milliers en fr-FR :
@@ -122,6 +123,9 @@ const styles = StyleSheet.create({
   },
   miseEnGardeTitre: { fontFamily: "Helvetica-Bold", fontSize: 9.5, marginBottom: 4, color: "#78350f" },
   miseEnGardeTexte: { fontSize: 9, lineHeight: 1.4, color: "#78350f" },
+  puceLigne: { flexDirection: "row", marginBottom: 4 },
+  pucePoint: { width: 10, fontSize: 9.5, color: "#28436a" },
+  puceTexte: { flex: 1, fontSize: 9.5, lineHeight: 1.4, color: "#152742" },
   piedDePage: {
     position: "absolute",
     bottom: 24,
@@ -140,6 +144,7 @@ const MISE_EN_GARDE =
   "Le montant obtenu constitue un ordre de grandeur documenté et non une mesure comptable. Les composants relevant du coût d'opportunité reposent sur une contribution horaire moyenne qui lisse les écarts entre missions, et le composant risques suppose des probabilités estimées. La valeur de l'exercice tient moins à l'exactitude du montant qu'au fait de rendre visible et discutable une charge jusque-là absente de tout compte.";
 
 interface FicheDeterminationProps {
+  identification: Identification;
   parametres: Parametres;
   taux: TauxValorisation;
   synthese: Synthese;
@@ -157,6 +162,7 @@ function ligneParametre(label: string, valeur: string) {
 }
 
 export function FicheDetermination({
+  identification,
   parametres,
   taux,
   synthese,
@@ -164,6 +170,7 @@ export function FicheDetermination({
   dateGeneration,
 }: FicheDeterminationProps) {
   const p = parametres;
+  const lectureQualitative = genererLectureQualitative(synthese, lectures).map(sansEspaceFine);
   return (
     <Document title="Évaluation des coûts cachés du retard de transmission des pièces comptables">
       <Page size="A4" style={styles.page}>
@@ -171,7 +178,11 @@ export function FicheDetermination({
           Évaluation des coûts cachés du retard de transmission des pièces comptables
         </Text>
         <Text style={styles.sousTitre}>Fiche de détermination</Text>
-        <Text style={styles.dateGeneration}>Générée le {formatDate(dateGeneration)}</Text>
+        <Text style={styles.dateGeneration}>
+          {identification.cabinet} — Établie par {identification.nomUtilisateur}
+          {"  ·  "}
+          Générée le {formatDate(dateGeneration)}
+        </Text>
 
         <Text style={styles.sectionTitre}>Hypothèses structurantes de l&apos;évaluation</Text>
         <View>
@@ -256,6 +267,20 @@ export function FicheDetermination({
             valeur={formatPourcentage(lectures.coutRapporteMCV)}
           />
         </View>
+
+        {lectureQualitative.length > 0 && (
+          <>
+            <Text style={styles.sectionTitre}>Lecture qualitative</Text>
+            <View>
+              {lectureQualitative.map((phrase) => (
+                <View style={styles.puceLigne} key={phrase}>
+                  <Text style={styles.pucePoint}>•</Text>
+                  <Text style={styles.puceTexte}>{phrase}</Text>
+                </View>
+              ))}
+            </View>
+          </>
+        )}
 
         <View style={styles.miseEnGarde}>
           <Text style={styles.miseEnGardeTitre}>Mise en garde méthodologique</Text>

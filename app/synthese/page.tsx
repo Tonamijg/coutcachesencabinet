@@ -13,6 +13,7 @@ import {
   calculerTotauxReleveTemps,
 } from "@/lib/calculations";
 import { formatMontant, formatMontantPrecis, formatNombre2, formatPourcentage } from "@/lib/format";
+import { genererLectureQualitative, genererPistesAction } from "@/lib/interpretation";
 
 const MISE_EN_GARDE =
   "Le montant obtenu constitue un ordre de grandeur documenté et non une mesure comptable. Les composants relevant du coût d'opportunité reposent sur une contribution horaire moyenne qui lisse les écarts entre missions, et le composant risques suppose des probabilités estimées. La valeur de l'exercice tient moins à l'exactitude du montant qu'au fait de rendre visible et discutable une charge jusque-là absente de tout compte.";
@@ -25,7 +26,7 @@ export default function PageSynthese() {
 
   if (!pret) return null;
 
-  const { parametres, releveTemps, dysfonctionnements } = etat;
+  const { identification, parametres, releveTemps, dysfonctionnements } = etat;
   const taux = calculerTauxValorisation(parametres);
   const totauxTemps = calculerTotauxReleveTemps(
     releveTemps,
@@ -35,6 +36,8 @@ export default function PageSynthese() {
   );
   const synthese = calculerSynthese(dysfonctionnements, totauxTemps.totalValorisation, taux, parametres);
   const lectures = calculerLecturesDerivees(synthese, parametres, taux, totauxTemps.totalAnnuelHeures);
+  const lectureQualitative = genererLectureQualitative(synthese, lectures);
+  const pistesAction = genererPistesAction(synthese);
 
   async function exporterPdf() {
     setErreurPdf(null);
@@ -46,6 +49,7 @@ export default function PageSynthese() {
       ]);
       const document = (
         <FicheDetermination
+          identification={identification}
           parametres={parametres}
           taux={taux}
           synthese={synthese}
@@ -141,15 +145,82 @@ export default function PageSynthese() {
       <section>
         <h2 className="mb-3 text-lg font-semibold text-brand-900">Lectures dérivées</h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <Indicateur label="Coût caché par collaborateur" valeur={formatMontant(lectures.coutParCollaborateur)} />
-          <Indicateur label="Coût caché par dossier du périmètre" valeur={formatMontantPrecis(lectures.coutParDossier)} />
-          <Indicateur label="Part du coût en décaissement réel" valeur={formatPourcentage(lectures.partDecaissementReel)} />
-          <Indicateur label="Part du coût en coût d'opportunité" valeur={formatPourcentage(lectures.partCoutOpportunite)} />
-          <Indicateur label="Part du coût probabilisé" valeur={formatPourcentage(lectures.partCoutProbabilise)} />
-          <Indicateur label="Équivalent temps plein mobilisé" valeur={`${formatNombre2(lectures.equivalentTempsPlein)} ETP`} />
-          <Indicateur label="Coût caché rapporté à la MCV" valeur={formatPourcentage(lectures.coutRapporteMCV)} />
+          <Indicateur
+            label="Coût caché par collaborateur"
+            valeur={formatMontant(lectures.coutParCollaborateur)}
+            formule="Total ÷ effectif productif (étape 1)"
+          />
+          <Indicateur
+            label="Coût caché par dossier du périmètre"
+            valeur={formatMontantPrecis(lectures.coutParDossier)}
+            formule="Total ÷ nombre de dossiers (étape 1)"
+          />
+          <Indicateur
+            label="Part du coût en décaissement réel"
+            valeur={formatPourcentage(lectures.partDecaissementReel)}
+            formule="(Sursalaire + Surconsommation) ÷ Total"
+          />
+          <Indicateur
+            label="Part du coût en coût d'opportunité"
+            valeur={formatPourcentage(lectures.partCoutOpportunite)}
+            formule="(Surtemps + Non-production + Non-création de potentiel) ÷ Total"
+          />
+          <Indicateur
+            label="Part du coût probabilisé"
+            valeur={formatPourcentage(lectures.partCoutProbabilise)}
+            formule="Risques ÷ Total"
+          />
+          <Indicateur
+            label="Équivalent temps plein mobilisé"
+            valeur={`${formatNombre2(lectures.equivalentTempsPlein)} ETP`}
+            formule="Total des heures de collecte (étape 2) ÷ heures par collaborateur (étape 1)"
+          />
+          <Indicateur
+            label="Coût caché rapporté à la MCV"
+            valeur={formatPourcentage(lectures.coutRapporteMCV)}
+            formule="Total ÷ marge sur coûts variables (étape 1)"
+          />
         </div>
       </section>
+
+      {lectureQualitative.length > 0 && (
+        <Callout titre="Lecture qualitative">
+          <ul className="list-disc space-y-1.5 pl-5">
+            {lectureQualitative.map((phrase) => (
+              <li key={phrase}>{phrase}</li>
+            ))}
+          </ul>
+        </Callout>
+      )}
+
+      {pistesAction.length > 0 && (
+        <section>
+          <h2 className="mb-1 text-lg font-semibold text-brand-900">Pistes d&apos;action</h2>
+          <p className="mb-3 text-sm text-brand-600">
+            Suggestions génériques, classées du poste le plus lourd au plus léger. À adapter à
+            l&apos;organisation réelle du cabinet — ce ne sont pas des mesures prêtes à l&apos;emploi.
+          </p>
+          <div className="space-y-3">
+            {pistesAction.map((piste) => (
+              <div key={piste.cle} className="rounded-lg border border-brand-100 bg-white p-4 shadow-sm">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <h3 className="font-semibold text-brand-900">{piste.nom}</h3>
+                  <span className="text-sm font-medium text-brand-500">
+                    {formatMontant(piste.montant)}
+                  </span>
+                </div>
+                {piste.suggestions.length > 0 && (
+                  <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-brand-700">
+                    {piste.suggestions.map((s) => (
+                      <li key={s}>{s}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       <Callout variante="avertissement" titre="Mise en garde méthodologique">
         {MISE_EN_GARDE}
@@ -182,11 +253,12 @@ export default function PageSynthese() {
   );
 }
 
-function Indicateur({ label, valeur }: { label: string; valeur: string }) {
+function Indicateur({ label, valeur, formule }: { label: string; valeur: string; formule: string }) {
   return (
     <div className="rounded-lg border border-brand-100 bg-white p-4 shadow-sm">
       <p className="text-xs font-medium uppercase tracking-wide text-brand-500">{label}</p>
       <p className="mt-1 text-xl font-bold text-brand-900">{valeur}</p>
+      <p className="mt-1 text-xs text-brand-400">{formule}</p>
     </div>
   );
 }

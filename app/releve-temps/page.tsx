@@ -219,6 +219,11 @@ export default function PageReleveTemps() {
         </datalist>
       </section>
 
+      <p className="text-xs text-brand-400">
+        Moy. hebdo = (somme des 8 valeurs saisies) ÷ 4 · Total annuel = Moy. hebdo × Semaines
+        travaillées (étape 1) · Valorisation = Total annuel × Contribution horaire (étape 1).
+      </p>
+
       <div>
         <button
           type="button"

@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { ProgressBar } from "./ProgressBar";
-import { ETAPES } from "@/lib/types";
+import { useEvaluation } from "@/context/EvaluationContext";
+import { ETAPES, identificationComplete } from "@/lib/types";
 
 interface StepShellProps {
   etape: number;
@@ -15,14 +16,24 @@ interface StepShellProps {
 }
 
 export function StepShell({ etape, titre, objet, children, precedent, suivant }: StepShellProps) {
+  const { etat, pret } = useEvaluation();
+  const identifie = pret && identificationComplete(etat.identification);
+
   return (
     <div className="min-h-screen bg-[#f4f6f9]">
       <ProgressBar />
       <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-10">
         <header className="mb-8">
-          <p className="text-sm font-medium uppercase tracking-wide text-brand-500">
-            Étape {etape} sur {ETAPES.length - 1}
-          </p>
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <p className="text-sm font-medium uppercase tracking-wide text-brand-500">
+              Étape {etape} sur {ETAPES.length - 1}
+            </p>
+            {identifie && (
+              <p className="rounded-full bg-brand-50 px-3 py-1 text-xs font-medium text-brand-600">
+                {etat.identification.cabinet} · {etat.identification.nomUtilisateur}
+              </p>
+            )}
+          </div>
           <h1 className="mt-1 text-2xl font-bold text-brand-900 sm:text-3xl">{titre}</h1>
           <p className="mt-3 max-w-3xl text-base leading-relaxed text-brand-700">{objet}</p>
         </header>

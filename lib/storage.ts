@@ -1,4 +1,4 @@
-import { EvaluationState } from "./types";
+import { IDENTIFICATION_VIDE, EvaluationState } from "./types";
 
 const CLE_STOCKAGE = "couts-caches-evaluation-v1";
 
@@ -8,8 +8,10 @@ export function chargerEtat(): EvaluationState | null {
     const brut = window.localStorage.getItem(CLE_STOCKAGE);
     if (!brut) return null;
     const parsed = JSON.parse(brut);
-    if (parsed && parsed.version === 1) return parsed as EvaluationState;
-    return null;
+    if (!parsed || parsed.version !== 1) return null;
+    // Complète les sauvegardes antérieures à l'ajout du champ identification.
+    if (!parsed.identification) parsed.identification = { ...IDENTIFICATION_VIDE };
+    return parsed as EvaluationState;
   } catch {
     return null;
   }

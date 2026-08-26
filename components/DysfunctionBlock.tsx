@@ -44,6 +44,10 @@ export function DysfunctionBlock({
 
       {avertissement && <div className="px-4 pt-4">{avertissement}</div>}
 
+      <p className="px-4 pt-3 text-xs text-brand-400">
+        Calcul : Montant = Quantité × Taux unitaire.
+      </p>
+
       <div className="overflow-x-auto p-4">
         <table className="w-full min-w-[640px] border-collapse text-sm">
           <thead>

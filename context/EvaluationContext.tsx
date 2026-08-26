@@ -14,6 +14,7 @@ import { chargerEtat, effacerEtat, sauvegarderEtat } from "@/lib/storage";
 import {
   Dysfonctionnements,
   EvaluationState,
+  Identification,
   LigneDysfonctionnement,
   LigneReleveTemps,
   LigneRisque,
@@ -26,6 +27,7 @@ type BlocLigne = "sursalaire" | "surconsommation" | "nonProduction" | "nonCreati
 interface EvaluationContextValue {
   etat: EvaluationState;
   pret: boolean;
+  setIdentification: <K extends keyof Identification>(champ: K, valeur: Identification[K]) => void;
   setParametre: <K extends keyof Parametres>(champ: K, valeur: Parametres[K]) => void;
   ajouterLigneTemps: () => void;
   supprimerLigneTemps: (id: string) => void;
@@ -63,6 +65,13 @@ export function EvaluationProvider({ children }: { children: React.ReactNode }) 
     }
     sauvegarderEtat(etat);
   }, [etat, pret]);
+
+  const setIdentification = useCallback(
+    <K extends keyof Identification>(champ: K, valeur: Identification[K]) => {
+      setEtat((e) => ({ ...e, identification: { ...e.identification, [champ]: valeur } }));
+    },
+    []
+  );
 
   const setParametre = useCallback(
     <K extends keyof Parametres>(champ: K, valeur: Parametres[K]) => {
@@ -179,6 +188,7 @@ export function EvaluationProvider({ children }: { children: React.ReactNode }) 
     () => ({
       etat,
       pret,
+      setIdentification,
       setParametre,
       ajouterLigneTemps,
       supprimerLigneTemps,
@@ -194,6 +204,7 @@ export function EvaluationProvider({ children }: { children: React.ReactNode }) 
     [
       etat,
       pret,
+      setIdentification,
       setParametre,
       ajouterLigneTemps,
       supprimerLigneTemps,
